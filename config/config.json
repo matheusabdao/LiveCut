@@ -1,0 +1,53 @@
+{
+    "clip": {
+        "min_duration_seconds": 20,
+        "max_duration_seconds": 50,
+        "max_clips": 8,
+        "pre_padding_seconds": 5,
+        "post_padding_seconds": 3,
+        "target_aspect_ratio": "16:9",
+        "fallback_aspect_ratio": "16:9"
+    },
+    "audio": {
+        "sample_rate": 16000,
+        "volume_peak_threshold": 0.55,
+        "peak_min_distance_seconds": 6,
+        "silence_threshold_db": -40
+    },
+    "transcription": {
+        "whisper_model": "small",
+        "language": "pt",
+        "compute_type": "int8",
+        "device": "cpu",
+        "beam_size": 5
+    },
+    "scoring": {
+        "volume_weight": 0.35,
+        "keyword_weight": 0.30,
+        "speech_density_weight": 0.15,
+        "excitement_words_weight": 0.20
+    },
+    "keywords": [
+        "caralho", "porra", "foda-se", "merda", "cu",
+        "incrivel", "impressionante", "uau", "wow",
+        "nossa", "meu deus", "santo", "caraca",
+        "ganhei", "perdi", "morri", "matei",
+        "insano", "doido", "louco", "surreal",
+        "melhor", "pior", "historico",
+        "veja isso", "olha so", "olha so", "presta atencao",
+        "que isso", "que porra", "cacilda", "ta doido",
+        "vamos", "bom demais", "ruim demais", "puta que pariu",
+        "sacanagem", "brincadeira", "deixa eu ver", "olha ai"
+    ],
+    "paths": {
+        "output_dir": "output",
+        "temp_dir": "temp"
+    },
+    "ffmpeg": {
+        "preset": "slow",
+        "crf": 18,
+        "audio_bitrate": "256k",
+        "video_codec": "libx264",
+        "audio_codec": "aac"
+    }
+}
