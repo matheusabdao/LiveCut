@@ -1,7 +1,7 @@
 # LiveCut
 
 O LiveCut transforma o VOD de uma live em clipes prontos pra postar, sozinho e 100% no seu
-computador. Sem upload, sem conta, sem nuvem, sem chave de API.
+computador. Sem upload, sem conta, sem nuvem, sem chave de API. Meu objetivo aqui é atingir e ajudar streamers e clipadores.
 
 [English](README.md) · **Português**
 
@@ -23,14 +23,13 @@ Tudo roda offline. Seu vídeo nunca sai da sua máquina.
 
 ## Pra quem é
 
-Pra streamers e cliperos que querem clipes rápido, sem programa de edição e sem enrolação
-técnica.
+Pra streamers e clipadores que querem clipes rápido, sem programa de edição e sem precisar de ter uma grande técnica.
 
 ---
 
 ## Como começar (do jeito fácil)
 
-Você só precisa instalar duas coisas uma vez: **Python** e **FFmpeg**.
+Bom, você só precisa instalar duas coisas uma vez: **Python** e **FFmpeg**.
 
 ### 1. Instale o Python
 
