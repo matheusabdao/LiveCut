@@ -39,6 +39,12 @@
         "vamos", "bom demais", "ruim demais", "puta que pariu",
         "sacanagem", "brincadeira", "deixa eu ver", "olha ai"
     ],
+    "excitement_words": [
+        "caralho", "porra", "foda", "cu", "merda",
+        "uau", "wow", "nossa", "caraca", "insano", "doido",
+        "louco", "surreal", "incrivel", "impressionante",
+        "cacilda", "sacanagem", "puta"
+    ],
     "paths": {
         "output_dir": "output",
         "temp_dir": "temp"

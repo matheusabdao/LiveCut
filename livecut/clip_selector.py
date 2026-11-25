@@ -1,12 +1,23 @@
 import re
 import numpy as np
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
+
+from .volume_analyzer import compute_window_stats
+
+
+DEFAULT_EXCITEMENT_WORDS = [
+    "caralho", "porra", "foda", "cu", "merda",
+    "uau", "wow", "nossa", "caraca", "insano", "doido",
+    "louco", "surreal", "incrivel", "impressionante",
+    "cacilda", "sacanagem", "puta",
+]
 
 
 class HighlightClipSelector:
     def __init__(self, min_duration: int = 20, max_duration: int = 50,
                  max_clips: int = 8, pre_padding: int = 5, post_padding: int = 3,
                  keywords: List[str] = None,
+                 excitement_words: Optional[List[str]] = None,
                  volume_weight: float = 0.35,
                  keyword_weight: float = 0.30,
                  speech_density_weight: float = 0.15,
@@ -17,6 +28,11 @@ class HighlightClipSelector:
         self.pre_padding = pre_padding
         self.post_padding = post_padding
         self.keywords = keywords or []
+        self.excitement_words = {
+            self._normalize_text(w)
+            for w in (excitement_words or DEFAULT_EXCITEMENT_WORDS)
+            if self._normalize_text(w)
+        }
         self.volume_weight = volume_weight
         self.keyword_weight = keyword_weight
         self.speech_density_weight = speech_density_weight
@@ -112,13 +128,6 @@ class HighlightClipSelector:
         if not words:
             return 0.0
 
-        excitement_words = [
-            "caralho", "porra", "foda", "cu", "merda",
-            "uau", "wow", "nossa", "caraca", "insano", "doido",
-            "louco", "surreal", "incrivel", "impressionante",
-            "cacilda", "sacanagem", "puta",
-        ]
-
         count = 0
         valid_words = 0
         for word_info in words:
@@ -126,10 +135,8 @@ class HighlightClipSelector:
             if not word_norm or len(word_norm) <= 1:
                 continue
             valid_words += 1
-            for exc_word in excitement_words:
-                if word_norm == exc_word:
-                    count += 1
-                    break
+            if word_norm in self.excitement_words:
+                count += 1
 
         if valid_words == 0:
             return 0.0
@@ -280,30 +287,10 @@ class HighlightClipSelector:
         times = energy_data["times"]
         rms_norm = energy_data["rms_normalized"]
 
-        start_idx = np.searchsorted(times, start_time)
-        end_idx = np.searchsorted(times, end_time)
-
-        start_idx = max(0, min(start_idx, len(rms_norm) - 1))
-        end_idx = max(start_idx + 1, min(end_idx, len(rms_norm)))
-
-        window_rms = rms_norm[start_idx:end_idx]
-
-        if len(window_rms) == 0:
-            return {"avg": 0.0, "max": 0.0, "min": 0.0, "std": 0.0, "peak_count": 0, "variation": 0.0}
-
-        peak_count = int(np.sum(window_rms >= self._estimate_peak_threshold(rms_norm)))
-
-        diffs = np.diff(window_rms)
-        variation = float(np.mean(np.abs(diffs))) * 48 if len(diffs) > 0 else 0.0
-
-        return {
-            "avg": float(np.mean(window_rms)),
-            "max": float(np.max(window_rms)),
-            "min": float(np.min(window_rms)),
-            "std": float(np.std(window_rms)),
-            "peak_count": peak_count,
-            "variation": min(variation, 1.0),
-        }
+        return compute_window_stats(
+            rms_norm, times, start_time, end_time,
+            self._estimate_peak_threshold(rms_norm),
+        )
 
     def _estimate_peak_threshold(self, rms_norm: np.ndarray) -> float:
         valid = rms_norm[rms_norm > 0.02]
@@ -432,7 +419,7 @@ class HighlightClipSelector:
             lines.append(f"  Peak Type: {clip.get('peak_type', 'volume')} | "
                          f"Build-up: {clip.get('peak_build_up', 0):.3f}")
             lines.append("")
-            lines.append(f"  Component Scores:")
+            lines.append("  Component Scores:")
             lines.append(f"    - Volume: {clip['scores']['volume']:.4f}")
             lines.append(f"    - Audio Variation: {clip['scores'].get('volume_variation', 0):.4f}")
             lines.append(f"    - Keywords: {clip['scores']['keyword']:.4f} "
@@ -441,7 +428,7 @@ class HighlightClipSelector:
             lines.append(f"    - Excitement: {clip['scores']['excitement']:.4f}")
             lines.append(f"    - Silence Penalty: -{clip['scores'].get('silence_penalty', 0):.4f}")
             lines.append("")
-            lines.append(f"  Selection Rationale:")
+            lines.append("  Selection Rationale:")
             for reason in clip["reasons"]:
                 lines.append(f"    ✅ {reason}")
             lines.append("")

@@ -1,6 +1,46 @@
 import numpy as np
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple, Any
 from pathlib import Path
+
+
+_VARIATION_SCALE = 50.0
+
+
+def compute_window_stats(rms_norm: np.ndarray,
+                         times: np.ndarray,
+                         start_time: float,
+                         end_time: float,
+                         peak_threshold: float) -> Dict[str, float]:
+    """Compute RMS statistics for a temporal window.
+
+    Shared by the volume analyzer and the clip selector so both agree on the
+    same numbers (previously duplicated with diverging scaling constants).
+    """
+    start_idx = np.searchsorted(times, start_time)
+    end_idx = np.searchsorted(times, end_time)
+
+    start_idx = max(0, min(start_idx, len(rms_norm) - 1))
+    end_idx = max(start_idx + 1, min(end_idx, len(rms_norm)))
+
+    window_rms = rms_norm[start_idx:end_idx]
+
+    if len(window_rms) == 0:
+        return {"avg": 0.0, "max": 0.0, "min": 0.0, "std": 0.0,
+                "peak_count": 0, "variation": 0.0}
+
+    peak_count = int(np.sum(window_rms >= peak_threshold))
+
+    diffs = np.diff(window_rms)
+    variation = float(np.mean(np.abs(diffs))) * _VARIATION_SCALE if len(diffs) > 0 else 0.0
+
+    return {
+        "avg": float(np.mean(window_rms)),
+        "max": float(np.max(window_rms)),
+        "min": float(np.min(window_rms)),
+        "std": float(np.std(window_rms)),
+        "peak_count": peak_count,
+        "variation": min(variation, 1.0),
+    }
 
 
 class VolumeAnalyzer:
@@ -360,30 +400,9 @@ class VolumeAnalyzer:
         times = energy_data["times"]
         rms_norm = energy_data["rms_normalized"]
 
-        start_idx = np.searchsorted(times, start_time)
-        end_idx = np.searchsorted(times, end_time)
-
-        start_idx = max(0, min(start_idx, len(rms_norm) - 1))
-        end_idx = max(start_idx + 1, min(end_idx, len(rms_norm)))
-
-        window_rms = rms_norm[start_idx:end_idx]
-
-        if len(window_rms) == 0:
-            return {"avg": 0.0, "max": 0.0, "min": 0.0, "std": 0.0, "peak_count": 0, "variation": 0.0}
-
-        peak_count = int(np.sum(window_rms >= self.peak_threshold))
-
-        diffs = np.diff(window_rms)
-        variation = float(np.mean(np.abs(diffs))) * 50 if len(diffs) > 0 else 0.0
-
-        return {
-            "avg": float(np.mean(window_rms)),
-            "max": float(np.max(window_rms)),
-            "min": float(np.min(window_rms)),
-            "std": float(np.std(window_rms)),
-            "peak_count": peak_count,
-            "variation": min(variation, 1.0),
-        }
+        return compute_window_stats(
+            rms_norm, times, start_time, end_time, self.peak_threshold
+        )
 
     def detect_silence_periods(self, audio_path: str,
                                min_silence_duration: float = 1.0) -> List[Dict[str, float]]:
@@ -412,11 +431,6 @@ class VolumeAnalyzer:
             ImportError: If librosa is not installed.
             FileNotFoundError: If ``audio_path`` does not exist.
         """
-        try:
-            import librosa
-        except ImportError:
-            raise ImportError("librosa is not installed.")
-
         energy_data = self.compute_rms_energy(audio_path)
         db = energy_data["db"]
         times = energy_data["times"]

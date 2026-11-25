@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import sys
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -288,6 +287,7 @@ def run_pipeline(
             pre_padding=clip_cfg["pre_padding_seconds"],
             post_padding=clip_cfg["post_padding_seconds"],
             keywords=keywords,
+            excitement_words=cfg.get("excitement_words"),
             volume_weight=sc_cfg.get("volume_weight", 0.35),
             keyword_weight=sc_cfg.get("keyword_weight", 0.30),
             speech_density_weight=sc_cfg.get("speech_density_weight", 0.15),

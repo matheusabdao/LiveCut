@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict
 
@@ -7,11 +6,11 @@ from typing import Any, Dict
 def _get_default_config() -> Dict[str, Any]:
     return {
         "clip": {
-            "min_duration": 20,
-            "max_duration": 50,
+            "min_duration_seconds": 20,
+            "max_duration_seconds": 50,
             "max_clips": 8,
-            "pre_padding": 5,
-            "post_padding": 3,
+            "pre_padding_seconds": 5,
+            "post_padding_seconds": 3,
             "target_aspect_ratio": "16:9",
             "fallback_aspect_ratio": "16:9",
         },
@@ -45,6 +44,12 @@ def _get_default_config() -> Dict[str, Any]:
             "que isso", "que porra", "cacilda", "tá doido",
             "vamos", "bom demais", "ruim demais", "puta que pariu",
             "sacanagem", "brincadeira", "deixa eu ver", "olha aí",
+        ],
+        "excitement_words": [
+            "caralho", "porra", "foda", "cu", "merda",
+            "uau", "wow", "nossa", "caraca", "insano", "doido",
+            "louco", "surreal", "incrivel", "impressionante",
+            "cacilda", "sacanagem", "puta",
         ],
         "paths": {
             "output_dir": "output",

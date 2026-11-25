@@ -44,6 +44,10 @@ output/
 *.log
 *.tmp
 
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+
 # FFmpeg binaries (large, should be downloaded by user)
 ffmpeg-*/bin/ffmpeg.exe
 ffmpeg-*/bin/ffprobe.exe
