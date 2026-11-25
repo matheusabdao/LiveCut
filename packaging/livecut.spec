@@ -14,7 +14,11 @@ Build with:  pyinstaller packaging/livecut.spec --noconfirm
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_dynamic_libs,
+    collect_submodules,
+)
 
 ROOT = Path(SPECPATH).resolve().parent
 CONFIG_FILE = ROOT / "config" / "config.json"
@@ -25,6 +29,11 @@ ICON_PATH = str(ICON) if ICON.exists() else None
 datas = [(str(CONFIG_FILE), "config"), (str(ROOT / "README.md"), ".")]
 if ICON.exists():
     datas.append((str(ICON), "assets"))
+
+# faster-whisper loads silero_vad_v6.onnx from its own package directory at
+# runtime (see faster_whisper.utils.get_assets_path). PyInstaller does not pick
+# up package data files on its own, so they must be collected explicitly.
+datas += collect_data_files("faster_whisper")
 
 hiddenimports = [
     "run_gui",
