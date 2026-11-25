@@ -28,7 +28,24 @@ technical setup.
 
 ---
 
-## Getting started (the easy way)
+## Install on Windows (easiest)
+
+1. Open the [latest release](https://github.com/matheusabdao/livecut/releases/latest).
+2. Download **`LiveCut-Setup-<version>.exe`**.
+3. Run it. You can install **just for you** (no admin) or **for all users**.
+4. Leave the box **"download FFmpeg and the Whisper model now"** ticked. It uses your
+   internet once and leaves everything ready to work offline.
+5. Open **LiveCut** from the Start Menu, paste a VOD link and click **Run pipeline**.
+
+Windows may warn about an "unknown publisher", because the installer is not code-signed
+yet. Click **More info → Run anyway**. The app checks GitHub for new versions and tells you
+when an update is available.
+
+The installer is the recommended path. If you would rather run from source, keep reading.
+
+---
+
+## Getting started from source (manual)
 
 You only need two things installed once: **Python** and **FFmpeg**.
 
@@ -203,6 +220,11 @@ Usually the fix is adding better `keywords` for your game or streamer.
 Yes. `run_cli.py` returns `0` on success and `1` on failure, so it works with cron or the
 Windows Task Scheduler.
 
+**Something crashed. Where is the details?**
+A window shows up with the error and a button to report it on GitHub. The diagnostic file
+and the log are saved in `%APPDATA%\LiveCut\logs` (look for `crash_*.zip`). Nothing is ever
+sent automatically.
+
 ---
 
 ## For developers
@@ -218,9 +240,16 @@ livecut/
 ├── volume_analyzer.py   volume and peak detection
 ├── clip_selector.py     scores moments and picks the clips
 ├── video_cutter.py      cuts the clips with FFmpeg
-└── config_loader.py     loads config/config.json
+├── config_loader.py     loads the config (repo or user folder)
+├── app_paths.py         resolves folders in dev and packaged modes
+├── provisioning.py      downloads FFmpeg + the Whisper model
+├── updater.py           checks GitHub for a newer release
+├── crash.py             builds the crash report and the issue link
+├── logging_setup.py     rotating log file
+└── app.py               single entry point (GUI / CLI / --provision)
 run_cli.py               command-line entry point
-run_gui.py               desktop entry point
+run_gui.py               desktop (Tkinter) interface
+packaging/               PyInstaller spec, Inno Setup script, icon
 tests/                   test suite
 ```
 
@@ -233,7 +262,20 @@ ruff check .
 ```
 
 CI runs the same checks on every push and pull request
-(`.github/workflows/ci.yml`).
+(`.github/workflows/ci.yml`). You can also run it straight from the package:
+`python -m livecut --version`, `python -m livecut --help`, `python -m livecut --provision`.
+
+Build the Windows installer (only needed when cutting a release):
+
+```bash
+pip install pyinstaller
+python packaging/make_icon.py
+pyinstaller packaging/livecut.spec --noconfirm
+iscc packaging/installer.iss /DAppVersion=1.0.0
+```
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests, builds and publishes
+the installer to GitHub Releases. Bump `__version__` in `livecut/__init__.py` before tagging.
 
 Planned next: better highlight detection (using chat reactions) and a simpler local web
 interface. The design is in

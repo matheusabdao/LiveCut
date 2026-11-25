@@ -1,6 +1,9 @@
 import json
+import shutil
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+from . import app_paths
 
 
 def _get_default_config() -> Dict[str, Any]:
@@ -70,17 +73,48 @@ def _write_default_config(config_path: Path) -> None:
         json.dump(default_config, f, indent=4, ensure_ascii=False)
 
 
-def load_config(config_path: str) -> Dict[str, Any]:
-    path = Path(config_path)
+def _seed_config(config_path: Path, seed: Optional[Path]) -> None:
+    """Create the user config from the bundled seed, falling back to defaults."""
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    if seed is not None and seed.exists() and seed.resolve() != config_path.resolve():
+        try:
+            shutil.copyfile(seed, config_path)
+            return
+        except OSError:
+            pass
+    _write_default_config(config_path)
+
+
+def _apply_runtime_paths(config: Dict[str, Any]) -> None:
+    """Point output/temp to writable absolute folders when running packaged."""
+    if not app_paths.is_frozen():
+        return
+    paths = config.setdefault("paths", {})
+    output_dir = paths.get("output_dir")
+    if not output_dir or not Path(output_dir).is_absolute():
+        paths["output_dir"] = str(app_paths.default_output_dir())
+    temp_dir = paths.get("temp_dir")
+    if not temp_dir or not Path(temp_dir).is_absolute():
+        paths["temp_dir"] = str(app_paths.default_temp_dir())
+
+
+def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+    if config_path is None:
+        path = app_paths.default_config_path()
+        seed: Optional[Path] = app_paths.bundled_default_config()
+    else:
+        path = Path(config_path)
+        seed = None
 
     if not path.exists():
-        _write_default_config(path)
+        _seed_config(path, seed)
 
     with open(path, "r", encoding="utf-8") as f:
         config = json.load(f)
 
     defaults = _get_default_config()
     merged = _deep_merge(defaults, config)
+    _apply_runtime_paths(merged)
 
     return merged
 

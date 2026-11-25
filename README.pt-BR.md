@@ -28,7 +28,24 @@ técnica.
 
 ---
 
-## Como começar (do jeito fácil)
+## Instalar no Windows (mais fácil)
+
+1. Abra a [última versão](https://github.com/matheusabdao/livecut/releases/latest).
+2. Baixe o **`LiveCut-Setup-<versão>.exe`**.
+3. Rode ele. Você pode instalar **só pra você** (sem admin) ou **pra todos os usuários**.
+4. Deixe marcada a opção **"baixar FFmpeg e o modelo do Whisper agora"**. Ela usa sua
+   internet uma vez e deixa tudo pronto pra funcionar offline.
+5. Abra o **LiveCut** no Menu Iniciar, cole o link do VOD e clique em **Run pipeline**.
+
+O Windows pode avisar que o "editor é desconhecido", porque o instalador ainda não tem
+assinatura digital. Clique em **Mais informações → Executar assim mesmo**. O app confere no
+GitHub se tem versão nova e te avisa quando tiver atualização.
+
+O instalador é o caminho recomendado. Se você preferir rodar pelo código, continue lendo.
+
+---
+
+## Como começar pelo código (manual)
 
 Você só precisa instalar duas coisas uma vez: **Python** e **FFmpeg**.
 
@@ -203,6 +220,10 @@ Geralmente o ajuste é adicionar `keywords` melhores pro seu jogo ou streamer.
 Dá. O `run_cli.py` retorna `0` quando dá certo e `1` quando falha, então funciona com cron
 ou com o Agendador de Tarefas do Windows.
 
+**Deu um erro e fechou. Onde vejo os detalhes?**
+Abre uma janela com o erro e um botão pra reportar no GitHub. O arquivo de diagnóstico e o
+log ficam em `%APPDATA%\LiveCut\logs` (procure o `crash_*.zip`). Nada é enviado sozinho.
+
 ---
 
 ## Para quem mexe no código
@@ -218,9 +239,16 @@ livecut/
 ├── volume_analyzer.py   detecção de volume e picos
 ├── clip_selector.py     pontua os momentos e escolhe os clipes
 ├── video_cutter.py      corta os clipes com FFmpeg
-└── config_loader.py     carrega o config/config.json
+├── config_loader.py     carrega o config (do projeto ou do usuário)
+├── app_paths.py         resolve as pastas no modo dev e empacotado
+├── provisioning.py      baixa o FFmpeg + o modelo do Whisper
+├── updater.py           confere no GitHub se tem versão nova
+├── crash.py             monta o relatório de erro e o link da Issue
+├── logging_setup.py     log em arquivo rotativo
+└── app.py               entrada única (GUI / CLI / --provision)
 run_cli.py               entrada por linha de comando
-run_gui.py               entrada pela interface
+run_gui.py               interface desktop (Tkinter)
+packaging/               spec do PyInstaller, script do Inno Setup, ícone
 tests/                   suíte de testes
 ```
 
@@ -232,7 +260,22 @@ pytest -q
 ruff check .
 ```
 
-A CI roda os mesmos testes em cada push e pull request (`.github/workflows/ci.yml`).
+A CI roda os mesmos testes em cada push e pull request (`.github/workflows/ci.yml`). Dá pra
+rodar direto pelo pacote também: `python -m livecut --version`, `python -m livecut --help`,
+`python -m livecut --provision`.
+
+Gerar o instalador do Windows (só precisa quando for lançar uma versão):
+
+```bash
+pip install pyinstaller
+python packaging/make_icon.py
+pyinstaller packaging/livecut.spec --noconfirm
+iscc packaging/installer.iss /DAppVersion=1.0.0
+```
+
+Criar uma tag `v*` roda o `.github/workflows/release.yml`, que testa, compila e publica o
+instalador nas Releases do GitHub. Suba o `__version__` em `livecut/__init__.py` antes de
+criar a tag.
 
 Próximos passos planejados: detecção melhor de highlights (usando a reação do chat) e uma
 interface web local mais simples. O design está em

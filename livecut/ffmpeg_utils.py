@@ -5,9 +5,12 @@ import subprocess
 from pathlib import Path
 from typing import Tuple, Optional
 
+from . import app_paths
+
 
 _PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
+# Legacy dev layout: FFmpeg unpacked as a sibling folder of the project root.
 _FFMPEG_SEARCH_DIRS = [
     _PROJECT_ROOT,
 ]
@@ -19,15 +22,36 @@ _FFMPEG_DIR_PATTERNS = [
     "bin",
 ]
 
+_FFMPEG_EXE = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+_FFPROBE_EXE = "ffprobe.exe" if os.name == "nt" else "ffprobe"
+
+
+def _is_ffmpeg_dir(path: Path) -> bool:
+    return (path / _FFMPEG_EXE).exists() and (path / _FFPROBE_EXE).exists()
+
 
 def _find_ffmpeg_directory() -> Optional[Path]:
+    """Resolve the FFmpeg bin directory.
+
+    Order: ``LIVECUT_FFMPEG_DIR`` env var -> provisioned components dir ->
+    legacy project-root folder.
+    """
+    env_dir = os.environ.get("LIVECUT_FFMPEG_DIR")
+    if env_dir:
+        candidate = Path(env_dir)
+        if _is_ffmpeg_dir(candidate):
+            return candidate.resolve()
+
+    component_dir = app_paths.ffmpeg_dir()
+    if _is_ffmpeg_dir(component_dir):
+        return component_dir.resolve()
+
     for base_dir in _FFMPEG_SEARCH_DIRS:
         if not base_dir.exists():
             continue
         for pattern in _FFMPEG_DIR_PATTERNS:
-            matches = list(base_dir.glob(pattern))
-            for match in matches:
-                if (match / "ffmpeg.exe").exists() and (match / "ffprobe.exe").exists():
+            for match in base_dir.glob(pattern):
+                if _is_ffmpeg_dir(match):
                     return match.resolve()
     return None
 
@@ -48,11 +72,12 @@ def _get_ffmpeg_paths() -> Tuple[str, str, Optional[str]]:
 
     if ffmpeg is None or ffprobe is None:
         raise RuntimeError(
-            "FFmpeg not found!\n"
-            "Place the FFmpeg folder in the project root, or install it and add it to the system PATH.\n"
-            "Expected directory structure example:\n"
+            "FFmpeg nao foi encontrado.\n"
+            "No app instalado, rode 'LiveCut.exe --provision' para baixar os componentes.\n"
+            "Em desenvolvimento, coloque a pasta do FFmpeg na raiz do projeto ou instale-o\n"
+            "e adicione ao PATH do sistema. Exemplo de estrutura esperada:\n"
             "  Live Cut/\n"
-            "    └── ffmpeg-2026-08-09-git-...-essentials_build/\n"
+            "    └── ffmpeg-...-essentials_build/\n"
             "        └── bin/\n"
             "            ├── ffmpeg.exe\n"
             "            └── ffprobe.exe"

@@ -17,7 +17,6 @@ a log widget in real time.
 from __future__ import annotations
 
 import json
-import os
 import re
 import time
 import traceback
@@ -128,8 +127,8 @@ def run_pipeline(
     try:
         from livecut import load_config
 
-        if config_path is None:
-            config_path = os.path.join("config", "config.json")
+        # ``None`` lets the loader resolve the right config for the current mode
+        # (repo config in development, %APPDATA%\LiveCut\config.json when packaged).
         cfg = load_config(config_path)
     except Exception as exc:
         return PipelineResult(ok=False, error_message=f"Failed to load config: {exc}")

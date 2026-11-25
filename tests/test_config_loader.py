@@ -1,6 +1,8 @@
 """Tests for config loading and the pipeline/config key contract."""
 
 import json
+import sys
+from pathlib import Path
 
 from livecut.config_loader import _get_default_config, load_config
 
@@ -46,3 +48,35 @@ def test_default_config_has_excitement_words():
     cfg = _get_default_config()
     assert isinstance(cfg["excitement_words"], list)
     assert "caralho" in cfg["excitement_words"]
+
+
+def test_load_config_without_path_uses_development_config(monkeypatch):
+    monkeypatch.delenv("LIVECUT_HOME", raising=False)
+    monkeypatch.delattr(sys, "frozen", raising=False)
+
+    cfg = load_config(None)
+
+    for key in REQUIRED_CLIP_KEYS:
+        assert key in cfg["clip"]
+
+
+def test_load_config_seeds_user_config_when_frozen(tmp_path, monkeypatch):
+    seed_dir = tmp_path / "bundle" / "config"
+    seed_dir.mkdir(parents=True)
+    (seed_dir / "config.json").write_text(
+        json.dumps({"clip": {"max_clips": 4}}), encoding="utf-8"
+    )
+    (tmp_path / "app").mkdir()
+
+    monkeypatch.setenv("LIVECUT_HOME", str(tmp_path / "data"))
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path / "bundle"), raising=False)
+    monkeypatch.setattr(sys, "executable", str(tmp_path / "app" / "LiveCut.exe"))
+
+    cfg = load_config(None)
+
+    assert (tmp_path / "data" / "config.json").exists()
+    assert cfg["clip"]["max_clips"] == 4
+    assert cfg["clip"]["min_duration_seconds"] == 20  # merged defaults survive
+    assert Path(cfg["paths"]["output_dir"]).is_absolute()
+    assert Path(cfg["paths"]["temp_dir"]).is_absolute()

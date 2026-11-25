@@ -48,9 +48,14 @@ class LiveCutGui(tk.Tk):
         if str(project_root) not in sys.path:
             sys.path.insert(0, str(project_root))
 
-        # Config defaults (loaded lazily from config/config.json)
-        self._default_output = Path.cwd() / "output"
-        self._default_config = Path.cwd() / "config" / "config.json"
+        from livecut import app_paths, crash
+
+        # Route unhandled GUI callback errors to the crash reporter.
+        self.report_callback_exception = crash.tk_callback_exception
+
+        # Config/output defaults resolved for both dev and packaged runs.
+        self._default_output = app_paths.default_output_dir()
+        self._default_config = app_paths.default_config_path()
 
         # Message queue: worker thread pushes strings here; UI thread drains it
         self._msg_queue: "queue.Queue[tuple[int, str]]" = queue.Queue()
@@ -60,6 +65,7 @@ class LiveCutGui(tk.Tk):
         self._build_widgets()
         self._update_run_button()
         self.after(80, self._drain_queue)
+        self.after(300, self._ensure_components)
 
     # ------------------------------------------------------------------
     # UI construction
@@ -239,6 +245,55 @@ class LiveCutGui(tk.Tk):
                 subprocess.run(["xdg-open", str(out)], check=False)
         except Exception as exc:
             messagebox.showwarning(APP_TITLE, f"Could not open folder: {exc}")
+
+    # ------------------------------------------------------------------
+    # Runtime components (FFmpeg + Whisper model)
+    # ------------------------------------------------------------------
+    def _ensure_components(self) -> None:
+        """Offer to download FFmpeg/model on first launch or after a failed setup."""
+        from livecut import provisioning
+
+        missing = provisioning.missing_components()
+        if not missing:
+            return
+
+        labels = {
+            "ffmpeg": "FFmpeg (usado para cortar os videos)",
+            "model": "modelo do Whisper (usado para transcrever o audio)",
+        }
+        names = "\n".join(f"  - {labels.get(m, m)}" for m in missing)
+        if not messagebox.askyesno(
+            APP_TITLE,
+            "O LiveCut precisa baixar alguns componentes para funcionar:\n\n"
+            f"{names}\n\n"
+            "Isso usa a sua internet e acontece so uma vez. Baixar agora?",
+        ):
+            self._append_log("Componentes pendentes. Reinicie o app quando quiser baixar.\n")
+            return
+
+        self._start_provisioning()
+
+    def _start_provisioning(self) -> None:
+        self.btn_run.configure(state=tk.DISABLED)
+        self.progress.start(10)
+        self.status_var.set("Baixando componentes...")
+        self._append_log("\nBaixando FFmpeg e o modelo do Whisper. Isso pode demorar um pouco...\n")
+        threading.Thread(target=self._provision_worker, daemon=True).start()
+
+    def _provision_worker(self) -> None:
+        from livecut import provisioning
+
+        ok = False
+        try:
+            ok = provisioning.ensure_components(
+                lambda msg: self._msg_queue.put((0, msg))
+            )
+        except Exception as exc:  # pragma: no cover - network/env dependent
+            self._msg_queue.put((1, f"Falha ao baixar componentes: {exc}\n"))
+        finally:
+            self._msg_queue.put((99, "STOP"))
+        if ok:
+            self._msg_queue.put((2, "Componentes prontos para uso.\n"))
 
     # ------------------------------------------------------------------
     # Execution

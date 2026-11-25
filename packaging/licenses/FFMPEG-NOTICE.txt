@@ -1,0 +1,21 @@
+FFmpeg license notice
+=====================
+
+LiveCut does not ship FFmpeg. During installation (or on first launch) it
+downloads the official "essentials_build" package from the FFmpeg project at
+https://www.gyan.dev/ffmpeg/builds/ and stores it locally under
+components\ffmpeg\. The files are used as-is and are not modified.
+
+That build is licensed under the GNU General Public License (GPL) because it
+includes GPL-only components such as x264.
+
+FFmpeg project:        https://ffmpeg.org/
+FFmpeg license:        https://ffmpeg.org/legal.html
+FFmpeg source code:    https://ffmpeg.org/download.html
+Download used:         https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+
+LiveCut itself only calls the ffmpeg/ffprobe command-line tools as separate
+programs; it does not link against FFmpeg libraries.
+
+The Whisper model downloaded at setup time comes from
+https://huggingface.co/Systran and keeps its own license.
