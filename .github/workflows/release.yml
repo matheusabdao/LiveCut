@@ -39,7 +39,8 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $version = python -c "import re, pathlib; print(re.search(r'__version__\s*=\s*\"([^\"]+)\"', pathlib.Path('livecut/__init__.py').read_text(encoding='utf-8')).group(1))"
+          $match = Select-String -Path livecut/__init__.py -Pattern '__version__\s*=\s*"([^"]+)"'
+          $version = $match.Matches[0].Groups[1].Value
           Write-Host "Building LiveCut $version"
           "version=$version" >> $env:GITHUB_OUTPUT
 
