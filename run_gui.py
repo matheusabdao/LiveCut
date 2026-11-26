@@ -237,6 +237,7 @@ def main() -> int:
         height=WINDOW_SIZE[1],
         min_size=(820, 560),
         text_select=True,
+        js_api=api,
     )
     api.attach_window(window)
 
@@ -250,7 +251,7 @@ def main() -> int:
     except Exception:
         pass
 
-    webview.start(api=api, debug=False)
+    webview.start(debug=False)
     return 0
 
 
