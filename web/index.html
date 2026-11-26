@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveCut</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="theme-light">
+  <!-- Colorful background so the glass panels have something to blur -->
+  <div class="bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar glass">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">LiveCut</div>
+          <div class="brand-sub">Local VOD Clipper</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Início</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>Configurações</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+        </button>
+        <div class="version" id="appVersion">v1.1.0</div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- HOME VIEW -->
+      <section class="view view-home active" id="view-home">
+        <header class="view-header">
+          <h1>Cortar uma live</h1>
+          <p>Cole o link do VOD ou escolha um arquivo. Tudo roda no seu computador.</p>
+        </header>
+
+        <div class="panel glass">
+          <div class="field">
+            <label for="sourceInput">Fonte do vídeo</label>
+            <div class="input-row">
+              <input type="text" id="sourceInput" placeholder="https://kick.com/user/videos/UUID" />
+              <button class="btn btn-secondary" id="btnBrowseFile">Arquivo</button>
+              <button class="btn btn-secondary" id="btnPasteUrl">Colar URL</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="outputInput">Salvar clipes em</label>
+            <div class="input-row">
+              <input type="text" id="outputInput" />
+              <button class="btn btn-secondary" id="btnBrowseOutput">Escolher</button>
+              <button class="btn btn-secondary" id="btnOpenOutput">Abrir pasta</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" id="btnRun">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span>Executar pipeline</span>
+          </button>
+          <button class="btn btn-ghost" id="btnStop" disabled>Parar</button>
+          <div class="status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Pronto</span>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="panel glass log-panel">
+          <div class="log-header">
+            <span>Log</span>
+            <button class="btn btn-mini" id="btnClearLog">Limpar</button>
+          </div>
+          <pre class="log" id="logOutput"></pre>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section class="view view-settings" id="view-settings">
+        <header class="view-header">
+          <h1>Configurações</h1>
+          <p>Ajuste como o LiveCut encontra e corta os melhores momentos.</p>
+        </header>
+
+        <div class="panel glass">
+          <h2>Análise</h2>
+
+          <div class="field">
+            <label>
+              Sensibilidade ao chat
+              <span class="field-value" id="sensitivityValue">60</span>
+            </label>
+            <input type="range" id="sensitivity" min="0" max="100" value="60" />
+            <div class="field-hint">Mais alto = mais peso em palavras-chave e frases de hype. Mais baixo = foco no volume do áudio.</div>
+          </div>
+
+          <div class="field">
+            <label>
+              Precisão vs Velocidade
+              <span class="field-value" id="precisionValue">50</span>
+            </label>
+            <input type="range" id="precision" min="0" max="100" value="50" />
+            <div class="field-hint">Mais para velocidade = modelo Whisper menor e mais rápido. Mais para precisão = modelo maior e mais preciso.</div>
+          </div>
+
+          <div class="field">
+            <label for="maxClips">Quantidade máxima de clipes</label>
+            <input type="number" id="maxClips" min="1" max="30" value="8" />
+          </div>
+
+          <div class="field">
+            <label for="quality">Qualidade do download</label>
+            <select id="quality">
+              <option value="best">Melhor (stream-copy, sem perda)</option>
+              <option value="720p">720p (re-encode)</option>
+              <option value="480p">480p (mais rápido)</option>
+              <option value="worst">Pior (arquivo menor)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h2>Frases e interações customizadas</h2>
+          <p class="panel-desc">Adicione bordões, frases que o chat costuma usar ou momentos marcantes. O LiveCut dá prioridade a trechos onde essas frases aparecem.</p>
+
+          <div class="field">
+            <label for="phraseInput">Nova frase</label>
+            <div class="input-row">
+              <input type="text" id="phraseInput" placeholder="Ex: ele pulou, que tiro, kkkkk" />
+              <button class="btn btn-secondary" id="btnAddPhrase">Adicionar</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Ou envie um screenshot do chat</label>
+            <div class="input-row">
+              <button class="btn btn-secondary" id="btnOcrImage">Enviar imagem (OCR)</button>
+              <span class="field-hint" id="ocrHint">Extraímos o texto da imagem automaticamente.</span>
+            </div>
+          </div>
+
+          <div class="phrases-list" id="phrasesList"></div>
+        </div>
+
+        <div class="panel glass">
+          <h2>Opções avançadas</h2>
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="keepDownloaded" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Manter o VOD baixado na pasta temp</span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="skipWhisper" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Pular transcrição (mais rápido, só picos de áudio)</span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="skipCut" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Pular corte final (só gerar relatório)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" id="btnSaveSettings">Salvar configurações</button>
+          <span class="save-hint" id="saveHint"></span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

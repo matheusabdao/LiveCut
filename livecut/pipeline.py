@@ -90,6 +90,10 @@ def run_pipeline(
     skip_cut: bool = False,
     skip_transcription: bool = False,
     only_transcribe: bool = False,
+    chat_sensitivity: Optional[int] = None,
+    precision_speed: Optional[int] = None,
+    custom_phrases: Optional[List[str]] = None,
+    max_clips: Optional[int] = None,
     on_progress: Optional[ProgressFn] = None,
 ) -> PipelineResult:
     """Run the full LiveCut pipeline.
@@ -114,6 +118,15 @@ def run_pipeline(
         If True, skip Whisper (analysis falls back to audio-only peaks).
     only_transcribe:
         If True, download + transcribe and stop.
+    chat_sensitivity:
+        0..100. Higher values weight keywords/excitement more than raw volume and
+        lower the minimum score cutoff (more clips selected from chat cues).
+    precision_speed:
+        0..100. 0 = fastest (tiny model, beam=1), 100 = most precise (medium model).
+    custom_phrases:
+        Extra keywords/catchphrases the user wants prioritized in clip selection.
+    max_clips:
+        Override the maximum number of clips from the config.
     on_progress:
         Optional callback ``(message, step, total_steps)``. Defaults to printing.
     """
@@ -146,7 +159,38 @@ def run_pipeline(
         temp_dir.mkdir(parents=True, exist_ok=True)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        keywords: List[str] = cfg.get("keywords", [])
+        keywords: List[str] = list(cfg.get("keywords", []))
+
+        # --- User-facing overrides (from the GUI settings) ---
+        if chat_sensitivity is not None:
+            s = max(0, min(100, int(chat_sensitivity))) / 100.0
+            # 0 = audio dominant, 100 = keyword/excitement dominant
+            sc_cfg["volume_weight"] = round(0.60 - 0.45 * s, 3)
+            sc_cfg["keyword_weight"] = round(0.10 + 0.30 * s, 3)
+            sc_cfg["excitement_words_weight"] = round(0.15 + 0.15 * s, 3)
+            sc_cfg["speech_density_weight"] = 0.15
+            # higher sensitivity -> lower cutoff -> more clips from chat cues
+            clip_cfg["_min_score_cutoff"] = round(0.30 - 0.18 * s, 3)
+
+        if precision_speed is not None:
+            p = max(0, min(100, int(precision_speed)))
+            if p <= 20:
+                tx_cfg["whisper_model"], tx_cfg["beam_size"] = "tiny", 1
+            elif p <= 45:
+                tx_cfg["whisper_model"], tx_cfg["beam_size"] = "base", 3
+            elif p <= 75:
+                tx_cfg["whisper_model"], tx_cfg["beam_size"] = "small", 5
+            else:
+                tx_cfg["whisper_model"], tx_cfg["beam_size"] = "medium", 5
+
+        if custom_phrases:
+            for phrase in custom_phrases:
+                phrase = (phrase or "").strip()
+                if phrase and phrase not in keywords:
+                    keywords.append(phrase)
+
+        if max_clips is not None and max_clips > 0:
+            clip_cfg["max_clips"] = int(max_clips)
 
         step += 1
         progress(f"[1/{total_steps}] Config loaded. Quality = {quality}. "
@@ -291,6 +335,7 @@ def run_pipeline(
             keyword_weight=sc_cfg.get("keyword_weight", 0.30),
             speech_density_weight=sc_cfg.get("speech_density_weight", 0.15),
             excitement_weight=sc_cfg.get("excitement_words_weight", 0.20),
+            min_score_cutoff=clip_cfg.get("_min_score_cutoff", 0.18),
         )
         selected_clips = selector.select_best_clips(
             peaks, energy_data, transcription, video_duration

@@ -30,10 +30,23 @@ datas = [(str(CONFIG_FILE), "config"), (str(ROOT / "README.md"), ".")]
 if ICON.exists():
     datas.append((str(ICON), "assets"))
 
+# The modern web UI (HTML/CSS/JS) is bundled and loaded from _internal/web.
+WEB_DIR = ROOT / "web"
+if WEB_DIR.is_dir():
+    for f in WEB_DIR.rglob("*"):
+        if f.is_file():
+            datas.append((str(f), str(f.parent.relative_to(ROOT))))
+
 # faster-whisper loads silero_vad_v6.onnx from its own package directory at
 # runtime (see faster_whisper.utils.get_assets_path). PyInstaller does not pick
 # up package data files on its own, so they must be collected explicitly.
 datas += collect_data_files("faster_whisper")
+
+# pywebview ships WebView2 loader DLLs and platform backends as package data.
+datas += collect_data_files("webview")
+
+# rapidocr-onnxruntime bundles ONNX models used for screenshot OCR.
+datas += collect_data_files("rapidocr_onnxruntime")
 
 hiddenimports = [
     "run_gui",
@@ -48,12 +61,26 @@ hiddenimports = [
     "soundfile",
     "numpy",
     "scipy",
+    "webview",
+    "webview.platforms.edgechromium",
+    "webview.platforms.winforms",
+    "webview.platforms.mshtml",
+    "rapidocr_onnxruntime",
+    "onnxruntime",
+    "livecut.ocr",
+    "livecut.user_settings",
 ]
 hiddenimports += collect_submodules("ctranslate2")
+hiddenimports += collect_submodules("webview")
 
 binaries = []
 for package in ("ctranslate2", "tokenizers", "soundfile"):
     binaries += collect_dynamic_libs(package)
+# WebView2Loader.dll shipped by pywebview on Windows.
+try:
+    binaries += collect_dynamic_libs("webview")
+except Exception:
+    pass
 
 excludes = ["matplotlib", "IPython", "PyQt5", "PySide2", "PySide6", "pytest"]
 

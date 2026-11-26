@@ -21,7 +21,8 @@ class HighlightClipSelector:
                  volume_weight: float = 0.35,
                  keyword_weight: float = 0.30,
                  speech_density_weight: float = 0.15,
-                 excitement_weight: float = 0.20):
+                 excitement_weight: float = 0.20,
+                 min_score_cutoff: float = 0.18):
         self.min_duration = min_duration
         self.max_duration = max_duration
         self.max_clips = max_clips
@@ -37,6 +38,7 @@ class HighlightClipSelector:
         self.keyword_weight = keyword_weight
         self.speech_density_weight = speech_density_weight
         self.excitement_weight = excitement_weight
+        self.min_score_cutoff = min_score_cutoff
 
     def _normalize_text(self, text: str) -> str:
         text = text.lower()
@@ -375,7 +377,7 @@ class HighlightClipSelector:
 
         candidates.sort(key=lambda x: x["score"], reverse=True)
 
-        min_score_cutoff = 0.18
+        min_score_cutoff = self.min_score_cutoff
         candidates = [c for c in candidates if c["score"] >= min_score_cutoff]
 
         if len(candidates) > self.max_clips * 6:

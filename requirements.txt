@@ -17,4 +17,8 @@ huggingface_hub>=0.20
 yt-dlp>=2024.1.0
 curl-cffi>=0.7
 
-# Optional GUI (Tkinter is usually bundled with Python)
+# Desktop GUI (native window hosting a modern web UI)
+pywebview>=5.0
+
+# OCR for user-uploaded chat screenshots (reuses onnxruntime)
+rapidocr-onnxruntime>=1.3
